@@ -8,7 +8,6 @@ require "logstash/util/charset"
 # framing in their transport protocol (such as zeromq, rabbitmq, redis, etc)
 class LogStash::Codecs::Plain < LogStash::Codecs::Base
   config_name "plain"
-  milestone 3
 
   # Set the message you which to emit for each event. This supports `sprintf`
   # strings.
