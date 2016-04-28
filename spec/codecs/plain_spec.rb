@@ -19,8 +19,8 @@ describe LogStash::Codecs::Plain do
           insist { data.encoding.name } == "UTF-8"
           insist { data.valid_encoding? } == true
           subject.decode(data) do |event|
-            insist { event["message"] } == data
-            insist { event["message"].encoding.name } == "UTF-8"
+            insist { event.get("message") } == data
+            insist { event.get("message").encoding.name } == "UTF-8"
           end
         end
       end
@@ -30,8 +30,8 @@ describe LogStash::Codecs::Plain do
           insist { data.encoding.name } == "UTF-8"
           insist { data.valid_encoding? } == false
           subject.decode(data) do |event|
-            insist { event["message"] } == data.inspect[1..-2]
-            insist { event["message"].encoding.name } == "UTF-8"
+            insist { event.get("message") } == data.inspect[1..-2]
+            insist { event.get("message").encoding.name } == "UTF-8"
           end
         end
       end
@@ -53,8 +53,8 @@ describe LogStash::Codecs::Plain do
           insist { a.valid_encoding? } == true
 
           subject.decode(a) do |event|
-            insist { event["message"] } == b
-            insist { event["message"].encoding.name } == "UTF-8"
+            insist { event.get("message") } == b
+            insist { event.get("message").encoding.name } == "UTF-8"
           end
         end
       end
@@ -75,8 +75,8 @@ describe LogStash::Codecs::Plain do
           insist { a.valid_encoding? } == true
 
           subject.decode(a) do |event|
-            insist { event["message"] } == b
-            insist { event["message"].encoding.name } == "UTF-8"
+            insist { event.get("message") } == b
+            insist { event.get("message").encoding.name } == "UTF-8"
           end
         end
       end
@@ -86,7 +86,7 @@ describe LogStash::Codecs::Plain do
   context "#encode" do
     it "should return a plain text encoding" do
       event = LogStash::Event.new
-      event["message"] = "Hello World."
+      event.set("message", "Hello World.")
       subject.on_event do |event, data|
         insist { data } == event.to_s
       end
