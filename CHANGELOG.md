@@ -1,3 +1,6 @@
+## 3.0.6
+  - Code cleanup. See https://github.com/logstash-plugins/logstash-codec-plain/pull/6
+
 ## 3.0.5
   - Update gemspec summary
 
