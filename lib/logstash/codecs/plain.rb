@@ -24,24 +24,19 @@ class LogStash::Codecs::Plain < LogStash::Codecs::Base
   # This only affects "plain" format logs since json is `UTF-8` already.
   config :charset, :validate => ::Encoding.name_list, :default => "UTF-8"
 
-  public
+  MESSAGE_FIELD = "message".freeze
+
   def register
     @converter = LogStash::Util::Charset.new(@charset)
     @converter.logger = @logger
   end
 
-  public
   def decode(data)
-    yield LogStash::Event.new("message" => @converter.convert(data))
-  end # def decode
+    yield LogStash::Event.new(MESSAGE_FIELD => @converter.convert(data))
+  end
 
-  public
   def encode(event)
-    if event.is_a?(LogStash::Event) and @format
-      @on_event.call(event, event.sprintf(@format))
-    else
-      @on_event.call(event, event.to_s)
-    end
-  end # def encode
-
-end # class LogStash::Codecs::Plain
+    encoded = @format ? event.sprintf(@format) : event.to_s
+    @on_event.call(event, encoded)
+  end
+end
