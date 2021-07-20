@@ -1,3 +1,6 @@
+## 3.1.0
+  - Feat: ECS compatibility [#10](https://github.com/logstash-plugins/logstash-codec-plain/pull/10)
+
 ## 3.0.6
   - Code cleanup. See https://github.com/logstash-plugins/logstash-codec-plain/pull/6
 

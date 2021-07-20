@@ -3,13 +3,34 @@ require "logstash/devutils/rspec/spec_helper"
 require "logstash/codecs/plain"
 require "logstash/event"
 require "insist"
+require 'logstash/plugin_mixins/ecs_compatibility_support/spec_helper'
 
-describe LogStash::Codecs::Plain do
+describe LogStash::Codecs::Plain, :ecs_compatibility_support do
   context "#decode" do
-    it "should return a valid event" do
-      subject.decode("Testing decoding.") do |event|
-        insist { event.is_a? LogStash::Event }
+
+    ecs_compatibility_matrix(:disabled, :v1, :v8 => :v1) do |ecs_select|
+
+      before(:each) do
+        allow_any_instance_of(described_class).to receive(:ecs_compatibility).and_return(ecs_compatibility)
       end
+
+      let(:message) { "Testing decoding." }
+
+      it "should return a valid event" do
+        count = 0
+        subject.decode(message) do |event|
+          count += 1
+          expect( event ).to be_a LogStash::Event
+        end
+        expect( count ).to eql 1
+      end
+
+      it "sets event.original in ECS mode" do
+        subject.decode(message) do |event|
+          expect( event.get("[event][original]") ).to eql message
+        end
+      end if ecs_select.active_mode != :disabled
+
     end
 
     context "using default UTF-8 charset" do

@@ -2,11 +2,18 @@
 require "logstash/codecs/base"
 require "logstash/util/charset"
 
+require 'logstash/plugin_mixins/ecs_compatibility_support'
+require 'logstash/plugin_mixins/event_support/event_factory_adapter'
+
 # The "plain" codec is for plain text with no delimiting between events.
 #
 # This is mainly useful on inputs and outputs that already have a defined
 # framing in their transport protocol (such as zeromq, rabbitmq, redis, etc)
 class LogStash::Codecs::Plain < LogStash::Codecs::Base
+
+  include LogStash::PluginMixins::ECSCompatibilitySupport(:disabled, :v1, :v8 => :v1)
+  include LogStash::PluginMixins::EventSupport::EventFactoryAdapter
+
   config_name "plain"
 
   # Set the message you which to emit for each event. This supports `sprintf`
@@ -24,15 +31,27 @@ class LogStash::Codecs::Plain < LogStash::Codecs::Base
   # This only affects "plain" format logs since json is `UTF-8` already.
   config :charset, :validate => ::Encoding.name_list, :default => "UTF-8"
 
-  MESSAGE_FIELD = "message".freeze
+  def initialize(*params)
+    super
 
-  def register
+    @original_field = ecs_select[disabled: nil, v1: '[event][original]']
+
     @converter = LogStash::Util::Charset.new(@charset)
     @converter.logger = @logger
   end
 
+  def register
+    # no-op
+  end
+
+  MESSAGE_FIELD = "message".freeze
+
   def decode(data)
-    yield LogStash::Event.new(MESSAGE_FIELD => @converter.convert(data))
+    message = @converter.convert(data)
+    event = event_factory.new_event
+    event.set MESSAGE_FIELD, message
+    event.set @original_field, message.dup.freeze if @original_field
+    yield event
   end
 
   def encode(event)
